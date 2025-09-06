@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            min-height: 100vh;
+            padding-top: 80px;
+            padding: 80px 2rem 2rem;
+            perspective: 1000px;
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            padding: 1rem 2rem;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo-text {
+            font-family: 'Comic Sans MS', cursive;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ff6b6b;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #64748b;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+        }
+
+        .nav-links a:hover {
+            color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .mobile-menu {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        .mobile-menu span {
+            width: 25px;
+            height: 3px;
+            background: #64748b;
+            margin: 3px 0;
+            transition: 0.3s;
+            border-radius: 2px;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: rgba(255, 255, 255, 0.95);
+                backdrop-filter: blur(10px);
+                flex-direction: column;
+                padding: 1rem 2rem;
+                box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+                transform: translateY(-100%);
+                opacity: 0;
+                visibility: hidden;
+                transition: all 0.3s ease;
+            }
+
+            .nav-links.active {
+                transform: translateY(0);
+                opacity: 1;
+                visibility: visible;
+            }
+
+            .mobile-menu {
+                display: flex;
+            }
+
+            .navbar {
+                padding: 1rem;
+            }
+
+            body {
+                padding-top: 70px;
+            }
+        }
+
+        .app {
+            max-width: 450px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #4ecdc4);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.2rem;
+            margin: 0;
+        }
+
+        .mini-stats {
+            display: flex;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        .mini-stat {
+            background: rgba(255,255,255,0.2);
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .input-section {
+            padding: 1rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #ff6b6b;
+            box-shadow: 0 0 0 3px rgba(255,107,107,0.1);
+            transform: scale(1.02);
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #ff6b6b, #4ecdc4);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(255,107,107,0.3);
+            transition: all 0.3s ease;
+            transform: translateZ(0);
+        }
+
+        button:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(255,107,107,0.4);
+        }
+        
+        button:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .todo-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: #64748b;
+        }
+
+        .empty-state .icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            color: #ff6b6b;
+        }
+
+        .empty-state p {
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        .todo-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #f1f5f9;
+            transition: all 0.2s ease;
+        }
+
+        .todo-item:hover {
+            background: rgba(255,107,107,0.05);
+        }
+
+        .todo-item.completed {
+            opacity: 0.6;
+        }
+
+        .todo-item.completed span {
+            text-decoration: line-through;
+        }
+
+        .todo-item input[type="checkbox"] {
+            margin-right: 1rem;
+            width: 18px;
+            height: 18px;
+            accent-color: #ff6b6b;
+        }
+
+        .todo-item span {
+            flex: 1;
+            cursor: pointer;
+        }
+        
+        .todo-item.editing span {
+            display: none;
+        }
+        
+        .todo-item .edit-input {
+            flex: 1;
+            margin-right: 1rem;
+            display: none;
+        }
+        
+        .todo-item.editing .edit-input {
+            display: block;
+        }
+        
+        .todo-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .icon-btn {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            padding: 0;
+        }
+        
+        .edit-btn {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+        }
+        
+        .save-btn {
+            background: linear-gradient(135deg, #56ab2f, #a8e6cf);
+        }
+        
+        .cancel-btn {
+            background: linear-gradient(135deg, #ffa726, #ffcc02);
+        }
+
+        .delete-btn {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+        }
+
+        .footer {
+            padding: 0.75rem 1rem;
+            background: rgba(255,107,107,0.05);
+            text-align: center;
+            color: #64748b;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .about-page {
+            max-width: 500px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+            padding: 3rem;
+            text-align: center;
+        }
+
+        .about-page h2 {
+            color: #ff6b6b;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .about-page p {
+            color: #64748b;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .features {
+            display: grid;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .feature {
+            background: rgba(255,107,107,0.1);
+            padding: 1rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+
+
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <span class="logo-text">Happy's Todos</span>
+            </div>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#home" onclick="showPage('home')">Home</a></li>
+                <li><a href="#about" onclick="showPage('about')">About</a></li>
+            </ul>
+            <div class="mobile-menu" onclick="toggleMobileMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="page active" id="homePage">
+        <div class="app">
+            <div class="header">
+                <h1>✨ Todo List</h1>
+                <div class="mini-stats">
+                    <div class="mini-stat"><span id="mainTotalTasks">0</span> Total</div>
+                    <div class="mini-stat"><span id="mainCompletedTasks">0</span> Done</div>
+                    <div class="mini-stat"><span id="mainPendingTasks">0</span> Left</div>
+                </div>
+            </div>
+            
+            <div class="input-section">
+                <input type="text" id="taskInput" placeholder="Add new task...">
+                <button onclick="addTask()">Add</button>
+            </div>
+            
+            <div class="todo-list" id="todoList">
+            </div>
+            
+            <div class="footer" id="footer">
+                Add your first task to get started! ✨
+            </div>
+        </div>
+    </div>
+
+    <div class="page" id="aboutPage">
+        <div class="about-page">
+            <h2>😊 About Happy's Todos</h2>
+            <p>A simple, beautiful todo app designed to bring joy to your daily tasks.</p>
+            
+            <div class="features">
+                <div class="feature">✨ Clean & Minimalist Design</div>
+                <div class="feature">📱 Fully Responsive</div>
+                <div class="feature">✏️ Edit Tasks Inline</div>
+                <div class="feature">🎯 Track Progress</div>
+            </div>
+            
+            <p>Built with love using vanilla HTML, CSS & JavaScript.</p>
+        </div>
+    </div>
+
+    <script>
+        let todos = [];
+        let nextId = 1;
+
+        function addTask() {
+            const input = document.getElementById('taskInput');
+            const text = input.value.trim();
+            
+            if (text) {
+                todos.push({ id: nextId++, text, completed: false });
+                input.value = '';
+                render();
+            }
+        }
+
+        function toggleTask(id) {
+            const todo = todos.find(t => t.id === id);
+            if (todo) {
+                todo.completed = !todo.completed;
+                render();
+            }
+        }
+
+        function deleteTask(id) {
+            todos = todos.filter(t => t.id !== id);
+            render();
+        }
+
+        function editTask(id) {
+            const item = document.querySelector(`[data-id="${id}"]`);
+            item.classList.add('editing');
+            const input = item.querySelector('.edit-input');
+            input.value = todos.find(t => t.id === id).text;
+            input.focus();
+        }
+
+        function saveTask(id) {
+            const item = document.querySelector(`[data-id="${id}"]`);
+            const input = item.querySelector('.edit-input');
+            const todo = todos.find(t => t.id === id);
+            if (todo && input.value.trim()) {
+                todo.text = input.value.trim();
+                render();
+            }
+        }
+
+        function cancelEdit(id) {
+            const item = document.querySelector(`[data-id="${id}"]`);
+            item.classList.remove('editing');
+        }
+
+
+
+        function toggleMobileMenu() {
+            const navLinks = document.getElementById('navLinks');
+            navLinks.classList.toggle('active');
+        }
+
+        function showPage(pageName) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById(pageName + 'Page').classList.add('active');
+            
+            // Close mobile menu when navigating
+            const navLinks = document.getElementById('navLinks');
+            navLinks.classList.remove('active');
+        }
+
+        function render() {
+            const list = document.getElementById('todoList');
+            const footer = document.getElementById('footer');
+            
+            if (todos.length === 0) {
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">🌟</div>
+                        <h3>Ready to be productive?</h3>
+                        <p>Add your first task above to get started!</p>
+                    </div>
+                `;
+            } else {
+                list.innerHTML = todos.map(todo => `
+                    <div class="todo-item ${todo.completed ? 'completed' : ''}" data-id="${todo.id}">
+                        <input type="checkbox" ${todo.completed ? 'checked' : ''} 
+                               onchange="toggleTask(${todo.id})">
+                        <span>${todo.text}</span>
+                        <input type="text" class="edit-input">
+                        <div class="todo-actions">
+                            <button class="icon-btn edit-btn" onclick="editTask(${todo.id})" title="Edit">✏️</button>
+                            <button class="icon-btn save-btn" onclick="saveTask(${todo.id})" title="Save" style="display: none">💾</button>
+                            <button class="icon-btn cancel-btn" onclick="cancelEdit(${todo.id})" title="Cancel" style="display: none">❌</button>
+                            <button class="icon-btn delete-btn" onclick="deleteTask(${todo.id})" title="Delete">🗑️</button>
+                        </div>
+                    </div>
+                `).join('');
+                
+                // Show/hide edit buttons
+                document.querySelectorAll('.todo-item').forEach(item => {
+                    const editBtn = item.querySelector('.edit-btn');
+                    const saveBtn = item.querySelector('.save-btn');
+                    const cancelBtn = item.querySelector('.cancel-btn');
+                    
+                    if (item.classList.contains('editing')) {
+                        editBtn.style.display = 'none';
+                        saveBtn.style.display = 'flex';
+                        cancelBtn.style.display = 'flex';
+                    } else {
+                        editBtn.style.display = 'flex';
+                        saveBtn.style.display = 'none';
+                        cancelBtn.style.display = 'none';
+                    }
+                });
+            }
+            
+            // Update main page stats
+            const mainTotalEl = document.getElementById('mainTotalTasks');
+            const mainCompletedEl = document.getElementById('mainCompletedTasks');
+            const mainPendingEl = document.getElementById('mainPendingTasks');
+            
+            if (mainTotalEl && mainCompletedEl && mainPendingEl) {
+                const total = todos.length;
+                const completed = todos.filter(t => t.completed).length;
+                const pending = total - completed;
+                
+                mainTotalEl.textContent = total;
+                mainCompletedEl.textContent = completed;
+                mainPendingEl.textContent = pending;
+            }
+            
+            const remaining = todos.filter(t => !t.completed).length;
+            if (remaining === 0 && todos.length > 0) {
+                footer.textContent = 'All tasks completed! Great job! 🎉';
+            } else if (todos.length === 0) {
+                footer.textContent = 'Your productivity journey starts here ✨';
+            } else {
+                footer.textContent = `Keep going! You're doing great! 🌟`;
+            }
+        }
+
+        document.getElementById('taskInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') addTask();
+        });
+
+        // Handle edit input enter key
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && e.target.classList.contains('edit-input')) {
+                const todoItem = e.target.closest('.todo-item');
+                const id = parseInt(todoItem.dataset.id);
+                saveTask(id);
+            }
+        });
+
+        // Initialize
+        render();
+    </script>
+</body>
+</html>
